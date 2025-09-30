@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caisse 2025 – Hedo</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <!-- SheetJS pour l'import/export Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- FileSaver pour l'export de fichiers -->
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <!-- Papa Parse pour CSV -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Caisse 2025 – Hedo</h1>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="dashboard" id="tab-dashboard">
+                <i class="fas fa-chart-line"></i> Tableau de bord
+            </button>
+            <button class="nav-tab" data-tab="events" id="tab-events">
+                <i class="fas fa-calendar-alt"></i> Événements
+            </button>
+            <button class="nav-tab" data-tab="import" id="tab-import">
+                <i class="fas fa-upload"></i> Importer
+            </button>
+            <button class="nav-tab" data-tab="export" id="tab-export">
+                <i class="fas fa-download"></i> Exporter
+            </button>
+        </nav>
+
+        <!-- Tableau de bord -->
+        <div class="tab-content active" id="content-dashboard">
+            <section class="content-section">
+                <h2 class="section-title">Résumé annuel</h2>
+                <div class="year-selector">
+                    <label for="year-select">Année :</label>
+                    <select id="year-select">
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                </div>
+                <div class="stats-grid" id="stats-grid">
+                    <!-- Les statistiques seront injectées ici -->
+                </div>
+            </section>
+
+            <section class="content-section">
+                <h2 class="section-title">Par trimestre</h2>
+                <div class="quarters-grid" id="quarters-grid">
+                    <!-- Les données par trimestre seront injectées ici -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Gestion des événements -->
+        <div class="tab-content" id="content-events">
+            <section class="content-section">
+                <h2 class="section-title">Gestion des événements</h2>
+                
+                <div class="filters-section">
+                    <div class="filter-group">
+                        <label for="filter-year">Année :</label>
+                        <select id="filter-year">
+                            <option value="">Toutes</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-quarter">Trimestre :</label>
+                        <select id="filter-quarter">
+                            <option value="">Tous</option>
+                            <option value="Q1">Q1</option>
+                            <option value="Q2">Q2</option>
+                            <option value="Q3">Q3</option>
+                            <option value="Q4">Q4</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="sort-by">Trier par :</label>
+                        <select id="sort-by">
+                            <option value="date-desc">Date (récent)</option>
+                            <option value="date-asc">Date (ancien)</option>
+                            <option value="nom-asc">Nom (A-Z)</option>
+                            <option value="nom-desc">Nom (Z-A)</option>
+                            <option value="ca-desc">CA (élevé)</option>
+                            <option value="ca-asc">CA (faible)</option>
+                            <option value="participants-desc">Participants (élevé)</option>
+                            <option value="participants-asc">Participants (faible)</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="addEvent()">
+                        <i class="fas fa-plus"></i> Ajouter un événement
+                    </button>
+                </div>
+
+                <div class="events-container">
+                    <div class="view-toggle">
+                        <button class="btn btn-small" id="toggle-view" onclick="toggleEventView()">
+                            <i class="fas fa-expand"></i> Vue détaillée
+                        </button>
+                    </div>
+                    
+                    <!-- Vue simple -->
+                    <table class="events-table" id="events-table-simple">
+                        <thead>
+                            <tr>
+                                <th>Événement</th>
+                                <th title="Couples">👫</th>
+                                <th title="Hommes">👨</th>
+                                <th title="Femmes">👩</th>
+                                <th title="Cartes Membre">🎫</th>
+                                <th title="Nourriture">🍽️</th>
+                                <th>Entrées<br><small>(Cash+Carte+Crédit)</small></th>
+                                <th>Recharges<br><small>(Cash+Crédit)</small></th>
+                                <th>Total CA<br><small>(sans nourriture)</small></th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="events-tbody-simple">
+                            <!-- Les événements seront injectés ici -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- Vue détaillée -->
+                    <div class="events-detailed-view" id="events-detailed-view" style="display: none;">
+                        <div id="detailed-events-container">
+                            <!-- Les événements détaillés seront injectés ici -->
+                        </div>
+                    </div>
+                    
+                    <div class="no-data" id="no-events" style="display: none;">
+                        Aucun événement trouvé.
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Import -->
+        <div class="tab-content" id="content-import">
+            <section class="content-section">
+                <h2 class="section-title">Importer des données</h2>
+                <p>Importez vos données depuis un fichier CSV ou Excel. Les colonnes requises sont : nom, date, participants, ca_ht, tva, ca_ttc.</p>
+                
+                <div class="import-buttons">
+                    <div class="import-btn" onclick="document.getElementById('file-input').click()">
+                        <i class="fas fa-file-csv icon"></i>
+                        Importer CSV/Excel
+                    </div>
+                    <div class="import-btn" onclick="document.getElementById('files-input-multiple').click()">
+                        <i class="fas fa-files icon"></i>
+                        Import Multiple
+                    </div>
+                </div>
+                
+                <input type="file" id="file-input" accept=".csv,.xlsx,.xls" style="display: none;" onchange="handleFileImport(event)">
+                <input type="file" id="files-input-multiple" accept=".csv,.xlsx,.xls" multiple style="display: none;" onchange="handleMultipleFileImport(event)">
+                
+                <div class="drop-zone" id="drop-zone">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 2em; margin-bottom: 10px; display: block;"></i>
+                    Glissez-déposez vos fichiers ici ou cliquez pour sélectionner
+                </div>
+
+                <div id="import-preview" class="content-section" style="display: none;">
+                    <h3>Prévisualisation des données</h3>
+                    <div id="preview-table-container"></div>
+                    <div class="import-actions">
+                        <button class="btn btn-primary" onclick="confirmImport()">Confirmer l'import</button>
+                        <button class="btn btn-secondary" onclick="cancelImport()">Annuler</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Export -->
+        <div class="tab-content" id="content-export">
+            <section class="content-section">
+                <h2 class="section-title">Exporter des données</h2>
+                
+                <div class="export-options">
+                    <div class="export-group">
+                        <h3>Export Personnalisé pour Comptable</h3>
+                        <div class="export-config">
+                            <div class="export-filters">
+                                <div class="filter-row">
+                                    <div class="filter-group">
+                                        <label>Période :</label>
+                                        <select id="export-period">
+                                            <option value="all">Toute la période</option>
+                                            <option value="year">Année complète</option>
+                                            <option value="quarter">Par trimestre</option>
+                                            <option value="custom">Période personnalisée</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-group" id="export-year-group">
+                                        <label>Année :</label>
+                                        <select id="export-year">
+                                            <option value="2025">2025</option>
+                                            <option value="2024">2024</option>
+                                            <option value="2023">2023</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-group" id="export-quarter-group" style="display: none;">
+                                        <label>Trimestre :</label>
+                                        <select id="export-quarter">
+                                            <option value="Q1">Q1</option>
+                                            <option value="Q2">Q2</option>
+                                            <option value="Q3">Q3</option>
+                                            <option value="Q4">Q4</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="filter-row" id="custom-dates" style="display: none;">
+                                    <div class="filter-group">
+                                        <label>Du :</label>
+                                        <input type="date" id="export-date-start">
+                                    </div>
+                                    <div class="filter-group">
+                                        <label>Au :</label>
+                                        <input type="date" id="export-date-end">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="export-columns">
+                                <h4>Colonnes à exporter :</h4>
+                                <div class="columns-grid">
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-nom" checked> Nom événement
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-date" checked> Date
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-trimestre" checked> Trimestre
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-type-soiree" checked> Type Soirée
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-couples" checked> Couples
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-hommes" checked> Hommes
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-femmes" checked> Femmes
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-cartes" checked> Cartes Membre
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-cash-entrees"> Cash Entrées
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-carte-entrees"> Carte Entrées
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-bc-entrees"> Crédit Entrées
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-total-entrees" checked> Total Entrées
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-cash-recharges"> Cash Recharges
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-bc-recharges"> Crédit Recharges
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-total-recharges" checked> Total Recharges
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-nourriture"> Nourriture
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-ca-ht" checked> CA HT
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-tva" checked> TVA
+                                    </label>
+                                    <label class="column-checkbox">
+                                        <input type="checkbox" id="col-ca-ttc" checked> CA TTC
+                                    </label>
+                                </div>
+                                
+                                <div class="export-actions">
+                                    <button class="btn btn-primary" onclick="exportCustom()">
+                                        <i class="fas fa-file-excel"></i> Exporter Excel Personnalisé
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="previewExport()">
+                                        <i class="fas fa-eye"></i> Prévisualiser
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="export-group">
+                        <h3>Exports Rapides</h3>
+                        <div class="export-buttons">
+                            <button class="export-btn" onclick="exportQuick('current-year')">
+                                <i class="fas fa-calendar"></i> Année Courante
+                            </button>
+                            <button class="export-btn" onclick="exportQuick('all-data')">
+                                <i class="fas fa-database"></i> Toutes Données
+                            </button>
+                            <button class="export-btn secondary" onclick="exportQuick('summary')">
+                                <i class="fas fa-chart-pie"></i> Résumé Comptable
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Modal pour ajouter/éditer un événement -->
+    <div class="modal" id="event-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Ajouter un événement</h3>
+                <button class="modal-close" onclick="closeEventModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="event-form">
+                    <div class="form-tabs">
+                        <button type="button" class="form-tab active" data-tab="general">Général</button>
+                        <button type="button" class="form-tab" data-tab="participants">Participants</button>
+                        <button type="button" class="form-tab" data-tab="recettes">Recettes</button>
+                        <button type="button" class="form-tab" data-tab="consommation">Consommation</button>
+                    </div>
+                    
+                    <!-- Onglet Général -->
+                    <div class="form-tab-content active" id="tab-general">
+                        <div class="form-group">
+                            <label for="event-nom">Nom de l'événement :</label>
+                            <input type="text" id="event-nom" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="event-date">Date :</label>
+                            <input type="date" id="event-date" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="event-heure-debut">Heure début :</label>
+                                <input type="time" id="event-heure-debut">
+                            </div>
+                            <div class="form-group">
+                                <label for="event-heure-fin">Heure fin :</label>
+                                <input type="time" id="event-heure-fin">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="event-type-soiree">Type de soirée :</label>
+                            <select id="event-type-soiree">
+                                <option value="">-- Sélectionner --</option>
+                                <option value="all-inclusive">🍹 All Inclusive</option>
+                                <option value="formule-bar">🍺 Formule Bar</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Onglet Participants -->
+                    <div class="form-tab-content" id="tab-participants">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="event-participants">Participants payants :</label>
+                                <input type="number" id="event-participants" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="event-presences-totales">Présences totales :</label>
+                                <input type="number" id="event-presences-totales" min="0">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="event-presents-couple">Présents couple :</label>
+                                <input type="number" id="event-presents-couple" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="event-presents-homme">Présents homme :</label>
+                                <input type="number" id="event-presents-homme" min="0">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="event-presents-femme">Présents femme :</label>
+                                <input type="number" id="event-presents-femme" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="event-renouvellement-carte">Renouvellement carte :</label>
+                                <input type="number" id="event-renouvellement-carte" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Onglet Recettes -->
+                    <div class="form-tab-content" id="tab-recettes">
+                        <h4>Entrées</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="event-cash-entrees">Cash entrées (€) :</label>
+                                <input type="number" id="event-cash-entrees" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="event-carte-entrees">Carte entrées (€) :</label>
+                                <input type="number" id="event-carte-entrees" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="event-credit-entrees">Crédit entrées (€) :</label>
+                                <input type="number" id="event-credit-entrees" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="event-total-entrees">Total entrées (€) :</label>
+                                <input type="number" id="event-total-entrees" step="0.01" min="0" readonly>
+                            </div>
+                        </div>
+                        
+                        <h4>Recharges</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="event-recharge-cash">Recharge Cash (€) :</label>
+                                <input type="number" id="event-recharge-cash" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="event-recharge-credit">Recharge Crédit (€) :</label>
+                                <input type="number" id="event-recharge-credit" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="event-total-recharges">Total recharges (€) :</label>
+                            <input type="number" id="event-total-recharges" step="0.01" min="0" readonly>
+                        </div>
+                        
+                        <h4>Totaux</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="event-ca-ht">CA HT (€) :</label>
+                                <input type="number" id="event-ca-ht" step="0.01" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="event-tva">TVA (€) :</label>
+                                <input type="number" id="event-tva" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="event-ca-ttc">CA TTC (€) :</label>
+                            <input type="number" id="event-ca-ttc" step="0.01" min="0" readonly>
+                        </div>
+                    </div>
+                    
+                    <!-- Onglet Consommation -->
+                    <div class="form-tab-content" id="tab-consommation">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="event-quantite-snacks">Quantité snacks :</label>
+                                <input type="number" id="event-quantite-snacks" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="event-consommation-nourriture">Consommation nourriture (€) :</label>
+                                <input type="number" id="event-consommation-nourriture" step="0.01" min="0">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveEvent()">Enregistrer</button>
+                <button class="btn btn-secondary" onclick="closeEventModal()">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour paramètres de ventilation -->
+    <div class="modal" id="ventilation-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ Paramètres de Ventilation</h3>
+                <button class="modal-close" onclick="closeVentilationModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="ventilation-form">
+                    <div class="ventilation-settings">
+                        <h4>💰 Tarifs d'Entrée</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="tarif-couple">👫 Tarif Couple :</label>
+                                <input type="number" id="tarif-couple" min="0" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="tarif-femme">👩 Tarif Femme :</label>
+                                <input type="number" id="tarif-femme" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="tarif-homme">👨 Tarif Homme :</label>
+                            <input type="number" id="tarif-homme" min="0" step="0.01" required>
+                        </div>
+
+                        <h4>🍺 Consommations</h4>
+                        <div class="form-group">
+                            <label for="prix-conso">Prix unitaire consommation :</label>
+                            <input type="number" id="prix-conso" min="0" step="0.01" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nbr-conso-couple">👫 Nbr Conso Couple :</label>
+                                <input type="number" id="nbr-conso-couple" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nbr-conso-femme">👩 Nbr Conso Femme :</label>
+                                <input type="number" id="nbr-conso-femme" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="nbr-conso-homme">👨 Nbr Conso Homme :</label>
+                            <input type="number" id="nbr-conso-homme" min="0" required>
+                        </div>
+
+                        <h4>📊 Aperçu des Calculs</h4>
+                        <div class="ventilation-preview">
+                            <div class="preview-row">
+                                <span>👫 Couple:</span>
+                                <span id="preview-couple">50€ - (9€ × 2) = 32€</span>
+                            </div>
+                            <div class="preview-row">
+                                <span>👩 Femme:</span>
+                                <span id="preview-femme">25€ - (9€ × 2) = 7€</span>
+                            </div>
+                            <div class="preview-row">
+                                <span>👨 Homme:</span>
+                                <span id="preview-homme">100€ - (9€ × 4) = 64€</span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="saveVentilationParams()">💾 Sauvegarder</button>
+                <button type="button" class="btn btn-warning" onclick="resetVentilationParams()">🔄 Réinitialiser</button>
+                <button type="button" class="btn btn-secondary" onclick="closeVentilationModal()">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNhRtZLh8vzpUPBOLOPBjT9NXIOWi9QQg",
+            authDomain: "staff-time-app.firebaseapp.com",
+            projectId: "staff-time-app",
+            storageBucket: "staff-time-app.firebasestorage.app",
+            messagingSenderId: "771230361508",
+            appId: "1:771230361508:web:98a84eb13557f45f4d4331"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Make db available globally
+        window.firebaseApp = app;
+        window.firebaseDB = db;
+        
+        console.log('🔥 Firebase initialized successfully!');
+    </script>
+    
+    <script src="js/app.js" type="module"></script>
+</body>
+</html>
