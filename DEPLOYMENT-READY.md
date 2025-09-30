@@ -3,7 +3,9 @@
 ## 🎉 Configuration Complète Terminée !
 
 **Date de préparation** : 30 Septembre 2025  
-**Statut** : ✅ **PRÊT POUR DÉPLOIEMENT GITHUB & FIREBASE**
+**Dernière mise à jour** : 30 Septembre 2025 (Correctif modules ES6)  
+**Statut** : ✅ **PRÊT POUR DÉPLOIEMENT GITHUB & FIREBASE**  
+**Version** : 1.0.1
 
 ---
 
@@ -286,7 +288,9 @@ Une fois tout déployé, vous aurez :
 2. ✅ Migration complète vers Firebase (plus d'API RESTful)
 3. ✅ Documentation à jour avec vos URLs
 4. ✅ Tous les boutons et liens fonctionnels
-5. ✅ Application prête pour production
+5. ✅ Correctif ES6 modules appliqué (fonctions exposées globalement)
+6. ✅ Application testée et validée
+7. ✅ Application prête pour production
 
 ### ⚠️ Ce qu'il faut faire :
 1. ⚠️ Créer la base Firestore dans Firebase Console

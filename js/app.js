@@ -1602,3 +1602,22 @@ function resetVentilationParams() {
         showMessage('Paramètres de ventilation réinitialisés !', 'success');
     }
 }
+
+// Exposer les fonctions nécessaires au scope global pour les onclick dans le HTML
+window.addEvent = addEvent;
+window.editEvent = editEvent;
+window.deleteEvent = deleteEvent;
+window.saveEvent = saveEvent;
+window.closeEventModal = closeEventModal;
+window.toggleEventView = toggleEventView;
+window.handleFileImport = handleFileImport;
+window.handleMultipleFileImport = handleMultipleFileImport;
+window.confirmImport = confirmImport;
+window.cancelImport = cancelImport;
+window.exportCustom = exportCustom;
+window.previewExport = previewExport;
+window.exportQuick = exportQuick;
+window.openVentilationModal = openVentilationSettings;
+window.closeVentilationModal = closeVentilationModal;
+window.saveVentilationParams = saveVentilationParams;
+window.resetVentilationParams = resetVentilationParams;
